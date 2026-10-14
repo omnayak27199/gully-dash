@@ -38,10 +38,10 @@ jobs:
         run: "$GODOT_BIN --headless --editor --path . --quit"
 
       - name: Run player controller smoke tests
-        run: "$GODOT_BIN --headless --path . --script res://tests/player_controller_test.gd"
+        run: "$GODOT_BIN --headless --path . res://tests/player_controller_test.tscn"
 
       - name: Run gameplay integration smoke tests
-        run: "$GODOT_BIN --headless --path . --script res://tests/game_smoke_test.gd"
+        run: "$GODOT_BIN --headless --path . res://tests/game_smoke_test.tscn"
 
       - name: Run save manager persistence tests
-        run: "$GODOT_BIN --headless --path . --script res://tests/save_manager_test.gd"
+        run: "$GODOT_BIN --headless --path . res://tests/save_manager_test.tscn"
