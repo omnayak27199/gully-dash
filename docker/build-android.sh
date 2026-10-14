@@ -36,13 +36,13 @@ echo "==> Importing project and validating resources"
 "${GODOT_BIN}" --headless --editor --path "${PROJECT_DIR}" --quit
 
 echo "==> Running player-controller tests"
-"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/player_controller_test.gd
+"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" res://tests/player_controller_test.tscn
 
 echo "==> Running gameplay integration tests"
-"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/game_smoke_test.gd
+"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" res://tests/game_smoke_test.tscn
 
 echo "==> Running save manager persistence tests"
-"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/save_manager_test.gd
+"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" res://tests/save_manager_test.tscn
 
 case "${BUILD_KIND}" in
   debug-apk)
