@@ -419,12 +419,13 @@ func _return_from_settings() -> void:
 
 func _show_menu() -> void:
 	run_state = &"menu"
-	player.set_controls_enabled(false)
 	player.reset_player()
 	player.apply_skin(SaveManager.selected_skin)
 	player.set_reduced_motion_enabled(SettingsManager.reduced_motion)
 	player.position.y = PLAYER_Y
 	player.visible = true
+	# reset_player enables its input by default; menu state must explicitly disable it.
+	player.set_controls_enabled(false)
 	queue_redraw()
 
 
