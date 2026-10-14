@@ -38,6 +38,14 @@ const COLOR_MUTED := Color("#b4c0b5")
 const COLOR_PANEL := Color("#172421")
 const COLOR_GREEN := Color("#218755")
 const COLOR_GOLD := Color("#f5c94f")
+const CAR_TEXTURE = preload("res://assets/sprites/traffic_car.svg")
+const BUS_TEXTURE = preload("res://assets/sprites/traffic_bus.svg")
+const COIN_TEXTURE = preload("res://assets/sprites/collectible_coin.svg")
+const PASSENGER_TEXTURE = preload("res://assets/sprites/collectible_passenger.svg")
+const SHIELD_TEXTURE = preload("res://assets/sprites/powerup_shield.svg")
+const MULTIPLIER_TEXTURE = preload("res://assets/sprites/powerup_multiplier.svg")
+const TREE_TEXTURE = preload("res://assets/sprites/roadside_tree.svg")
+const SHOP_TEXTURE = preload("res://assets/sprites/roadside_shop.svg")
 
 @onready var player: PlayerController = $Player
 
@@ -530,15 +538,15 @@ func _draw() -> void:
 func _draw_road() -> void:
 	draw_rect(Rect2(Vector2.ZERO, VIEW_SIZE), COLOR_GRASS)
 
-	# Procedural roadside blocks keep the prototype self-contained and asset-free.
-	for index in range(9):
-		var y: float = fmod(float(index) * 125.0 + road_offset * 0.35, VIEW_SIZE.y)
-		var left_x: float = 10.0 + float((index * 19) % 32)
-		var right_x: float = 486.0 + float((index * 13) % 22)
-		draw_rect(Rect2(left_x, y, 22.0, 58.0), Color("#667a5d"))
-		draw_rect(Rect2(left_x - 4.0, y - 6.0, 30.0, 12.0), Color("#d4bd85"))
-		draw_rect(Rect2(right_x, fmod(y + 38.0, VIEW_SIZE.y), 30.0, 50.0), Color("#7e7053"))
-		draw_rect(Rect2(right_x - 4.0, fmod(y + 32.0, VIEW_SIZE.y), 38.0, 12.0), Color("#c66c4b"))
+	# Original vector scenery adds Indian roadside character without raster blur.
+	for index in range(8):
+		var y: float = fmod(float(index) * 132.0 + road_offset * 0.34, VIEW_SIZE.y)
+		var left_x: float = 1.0 + float((index * 17) % 8)
+		var right_x: float = 474.0 + float((index * 13) % 7)
+		var tree_rect := Rect2(left_x, y - 12.0, 60.0, 68.0)
+		var shop_rect := Rect2(right_x, fmod(y + 36.0, VIEW_SIZE.y) - 8.0, 60.0, 68.0)
+		draw_texture_rect(TREE_TEXTURE, tree_rect, false)
+		draw_texture_rect(SHOP_TEXTURE, shop_rect, false)
 
 	draw_rect(Rect2(ROAD_LEFT, 0.0, ROAD_WIDTH, VIEW_SIZE.y), COLOR_ROAD)
 	draw_rect(Rect2(ROAD_LEFT, 0.0, 12.0, VIEW_SIZE.y), Color("#b6b6ad"))
@@ -556,44 +564,45 @@ func _draw_road() -> void:
 
 
 func _draw_vehicle(x: float, y: float, kind: String) -> void:
-	var is_bus: bool = kind == "bus"
-	var width: float = 62.0 if is_bus else 48.0
-	var height: float = 100.0 if is_bus else 74.0
-	var body_color: Color = Color("#2e8dcc") if is_bus else Color("#d8584b")
-	draw_rect(Rect2(x - width * 0.5 - 4.0, y - height * 0.5 + 9.0, 7.0, height - 18.0), Color("#111315"))
-	draw_rect(Rect2(x + width * 0.5 - 3.0, y - height * 0.5 + 9.0, 7.0, height - 18.0), Color("#111315"))
-	draw_rect(Rect2(x - width * 0.5, y - height * 0.5, width, height), body_color)
-	draw_rect(Rect2(x - width * 0.5 + 7.0, y - height * 0.5 + 9.0, width - 14.0, height * 0.32), Color("#83c8de"))
-	draw_rect(Rect2(x - width * 0.5 + 7.0, y + height * 0.06, width - 14.0, height * 0.18), Color("#272d32"))
-	draw_rect(Rect2(x - width * 0.5 + 5.0, y + height * 0.5 - 12.0, 9.0, 5.0), Color("#fff1b0"))
-	draw_rect(Rect2(x + width * 0.5 - 14.0, y + height * 0.5 - 12.0, 9.0, 5.0), Color("#fff1b0"))
+	var dimensions: Vector2 = _obstacle_size(kind)
+	var texture: Texture2D = BUS_TEXTURE if kind == "bus" else CAR_TEXTURE
+	var target := Rect2(
+		Vector2(x - dimensions.x * 0.5, y - dimensions.y * 0.5),
+		dimensions
+	)
+	# Slight shadow anchors vehicles visually to the road.
+	draw_rect(
+		Rect2(target.position + Vector2(3.0, 5.0), target.size),
+		Color(0.0, 0.0, 0.0, 0.22)
+	)
+	draw_texture_rect(texture, target, false)
 
 
 func _draw_collectible(x: float, y: float, kind: StringName) -> void:
+	var texture: Texture2D
+	var tint: Color
 	match kind:
 		&"coin":
-			draw_circle(Vector2(x, y), 18.0, Color("#8d5d17"))
-			draw_circle(Vector2(x, y), 14.0, COLOR_GOLD)
-			draw_circle(Vector2(x, y), 8.0, Color("#f9ae28"))
-			draw_string(ThemeDB.fallback_font, Vector2(x - 4.0, y + 5.0), "₹", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#8d5d17"))
+			texture = COIN_TEXTURE
+			tint = Color("#ffdd65")
 		&"passenger":
-			draw_circle(Vector2(x, y), 21.0, Color("#ffe09c"))
-			draw_circle(Vector2(x, y), 16.0, Color("#d9783e"))
-			draw_circle(Vector2(x, y - 6.0), 5.0, Color("#fff2d9"))
-			draw_rect(Rect2(x - 8.0, y, 16.0, 10.0), Color("#fff2d9"))
+			texture = PASSENGER_TEXTURE
+			tint = Color("#ffc16b")
 		&"shield":
-			draw_circle(Vector2(x, y), 21.0, Color("#9ce9f3"))
-			draw_colored_polygon(PackedVector2Array([
-				Vector2(x, y - 14.0), Vector2(x + 12.0, y - 8.0),
-				Vector2(x + 9.0, y + 7.0), Vector2(x, y + 14.0),
-				Vector2(x - 9.0, y + 7.0), Vector2(x - 12.0, y - 8.0)
-			]), Color("#2483a5"))
-			draw_line(Vector2(x - 5.0, y), Vector2(x - 1.0, y + 4.0), Color.WHITE, 2.0)
-			draw_line(Vector2(x - 1.0, y + 4.0), Vector2(x + 6.0, y - 5.0), Color.WHITE, 2.0)
+			texture = SHIELD_TEXTURE
+			tint = Color("#83e8f5")
 		&"multiplier":
-			draw_circle(Vector2(x, y), 21.0, Color("#e5b6ff"))
-			draw_circle(Vector2(x, y), 15.0, Color("#8751c4"))
-			_draw_centered_text_at("2X", Vector2(x, y + 5.0), 14, Color.WHITE)
+			texture = MULTIPLIER_TEXTURE
+			tint = Color("#d4a7ff")
+		_:
+			return
+
+	draw_circle(Vector2(x, y), 22.0, Color(tint.r, tint.g, tint.b, 0.16))
+	draw_texture_rect(
+		texture,
+		Rect2(Vector2(x - 22.0, y - 22.0), Vector2(44.0, 44.0)),
+		false
+	)
 
 
 func _draw_game_hud() -> void:
