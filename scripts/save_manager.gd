@@ -2,9 +2,9 @@ extends Node
 ## Small, offline-first save system. No account or backend is required.
 ## Writes to a temporary file and keeps a backup so interrupted writes can recover.
 
-const SAVE_PATH := "user://gully_dash_save.cfg"
-const TEMP_PATH := "user://gully_dash_save.tmp"
-const BACKUP_PATH := "user://gully_dash_save.bak"
+var save_path: String = "user://gully_dash_save.cfg"
+var temp_path: String = "user://gully_dash_save.tmp"
+var backup_path: String = "user://gully_dash_save.bak"
 const SAVE_VERSION: int = 1
 
 const SKIN_PRICES: Dictionary = {
@@ -34,6 +34,18 @@ var claimed_missions: Array[String] = []
 
 func _ready() -> void:
 	_load_data()
+
+
+## Allows isolated save locations for tests, migrations and future profile separation.
+func set_storage_paths(primary_path: String, temporary_path: String, backup_file_path: String, reload_now: bool = false) -> void:
+	if primary_path.is_empty() or temporary_path.is_empty() or backup_file_path.is_empty():
+		push_error("Save paths must not be empty.")
+		return
+	save_path = primary_path
+	temp_path = temporary_path
+	backup_path = backup_file_path
+	if reload_now:
+		_load_data()
 
 
 func record_run(final_score: int, earned_coins: int, distance_m: int, powerups_used: int) -> Array[String]:
@@ -122,13 +134,13 @@ func _award_completed_missions() -> Array[String]:
 
 func _load_data() -> void:
 	var config := ConfigFile.new()
-	var err: Error = config.load(SAVE_PATH)
+	var err: Error = config.load(save_path)
 	var primary_valid: bool = err == OK and int(config.get_value("meta", "version", -1)) == SAVE_VERSION
 
 	if not primary_valid:
 		# A parse error OR an incompatible primary can recover from a valid backup.
 		var backup := ConfigFile.new()
-		var backup_error: Error = backup.load(BACKUP_PATH)
+		var backup_error: Error = backup.load(backup_path)
 		var backup_valid: bool = backup_error == OK and int(backup.get_value("meta", "version", -1)) == SAVE_VERSION
 		if backup_valid:
 			config = backup
@@ -196,31 +208,31 @@ func _save_data() -> void:
 	config.set_value("cosmetics", "selected_skin", String(selected_skin))
 	config.set_value("missions", "claimed", claimed_missions)
 
-	var err: Error = config.save(TEMP_PATH)
+	var err: Error = config.save(temp_path)
 	if err != OK:
 		push_error("Could not write temporary save file: %s" % error_string(err))
 		return
 
-	var primary_path: String = ProjectSettings.globalize_path(SAVE_PATH)
-	var temp_path: String = ProjectSettings.globalize_path(TEMP_PATH)
-	var backup_path: String = ProjectSettings.globalize_path(BACKUP_PATH)
+	var primary_path: String = ProjectSettings.globalize_path(save_path)
+	var temp_path: String = ProjectSettings.globalize_path(temp_path)
+	var backup_path: String = ProjectSettings.globalize_path(backup_path)
 
 	# Keep one previous known-good save. If the primary is corrupt, do not
 	# overwrite the good backup with the corrupt file.
 	var primary_valid: bool = false
-	if FileAccess.file_exists(SAVE_PATH):
+	if FileAccess.file_exists(save_path):
 		var existing := ConfigFile.new()
-		var existing_error: Error = existing.load(SAVE_PATH)
+		var existing_error: Error = existing.load(save_path)
 		primary_valid = existing_error == OK and int(existing.get_value("meta", "version", -1)) == SAVE_VERSION
 
 	if primary_valid:
-		if FileAccess.file_exists(BACKUP_PATH):
+		if FileAccess.file_exists(backup_path):
 			DirAccess.remove_absolute(backup_path)
 		err = DirAccess.rename_absolute(primary_path, backup_path)
 		if err != OK:
 			push_error("Could not rotate save file to backup: %s" % error_string(err))
 			return
-	elif FileAccess.file_exists(SAVE_PATH):
+	elif FileAccess.file_exists(save_path):
 		err = DirAccess.remove_absolute(primary_path)
 		if err != OK:
 			push_error("Could not remove invalid primary save: %s" % error_string(err))
@@ -229,6 +241,6 @@ func _save_data() -> void:
 	err = DirAccess.rename_absolute(temp_path, primary_path)
 	if err != OK:
 		push_error("Could not commit save file: %s" % error_string(err))
-		if FileAccess.file_exists(BACKUP_PATH) and not FileAccess.file_exists(SAVE_PATH):
+		if FileAccess.file_exists(backup_path) and not FileAccess.file_exists(save_path):
 			DirAccess.rename_absolute(backup_path, primary_path)
 		return
