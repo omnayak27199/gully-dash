@@ -9,6 +9,13 @@ func _ready() -> void:
 
 
 func _run_tests() -> void:
+	# Keep integration tests from contaminating a developer's real local save.
+	SaveManager.set_storage_paths(
+		"user://gully_dash_game_test.cfg",
+		"user://gully_dash_game_test.tmp",
+		"user://gully_dash_game_test.bak",
+		true
+	)
 	var packed_scene := load("res://scenes/main.tscn") as PackedScene
 	_check(packed_scene != null, "main scene loads")
 	if packed_scene == null:
@@ -63,6 +70,8 @@ func _run_tests() -> void:
 	_check(game.run_state == &"menu", "stay button cancels exit")
 
 	game.queue_free()
+	await get_tree().process_frame
+	_remove_test_saves()
 	if failures == 0:
 		print("GAME_SMOKE_TESTS: PASS")
 		_finish()
@@ -77,6 +86,16 @@ func _check(condition: bool, description: String) -> void:
 	else:
 		failures += 1
 		push_error("FAIL: " + description)
+
+
+func _remove_test_saves() -> void:
+	for path in [
+		"user://gully_dash_game_test.cfg",
+		"user://gully_dash_game_test.tmp",
+		"user://gully_dash_game_test.bak"
+	]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func _finish(exit_code: int = 0) -> void:
