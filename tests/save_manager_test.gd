@@ -46,9 +46,12 @@ func _run_tests() -> void:
 	reloaded.set_storage_paths(TEST_SAVE, TEST_TEMP, TEST_BACKUP)
 	get_tree().root.add_child(reloaded)
 	await get_tree().process_frame
-	_check(reloaded.best_score == expected_best, "best score survives manager reload")
-	_check(reloaded.bank_coins == expected_coins, "coin wallet survives reload")
-	_check(reloaded.lifetime_runs == expected_runs, "run count survives reload")
+	_check(reloaded.best_score == manager.best_score, "best score survives reload")
+	_check(reloaded.bank_coins == manager.bank_coins, "coin wallet survives reload")
+	_check(reloaded.lifetime_runs == manager.lifetime_runs, "run count survives reload")
+	_check(reloaded.selected_skin == &"blue", "selected skin survives reload")
+	_check(reloaded.is_skin_unlocked(&"blue"), "purchased skin stays unlocked")
+	_check(reloaded.get_mission_progress("collect_25")["completed"], "completed mission survives reload")
 
 	# A second successful write guarantees a previous good file exists. Corrupt
 	# only the primary; a new instance should load the preserved backup.
