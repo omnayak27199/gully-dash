@@ -60,10 +60,11 @@ RUN set -eux; \
       "ndk;${ANDROID_NDK_VERSION}"; \
     rm -rf /tmp/android-tools /tmp/android-commandline-tools.zip
 
-# Godot stores Android SDK/JDK paths in user-level EditorSettings.
-RUN mkdir -p /root/.config/godot && \
-    printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' \
-      "${JAVA_HOME}" "${ANDROID_HOME}" > /root/.config/godot/editor_settings-4.tres
+# Keep readable Android SDK/JDK settings for non-root builds.
+RUN mkdir -p /opt/godot && \
+    printf '[gd_resource type="EditorSettings" format=3]\\n\\n[resource]\\nexport/android/java_sdk_path = "%s"\\nexport/android/android_sdk_path = "%s"\\n' \
+      "${JAVA_HOME}" "${ANDROID_HOME}" > /opt/godot/editor_settings-4.tres && \
+    chmod a+r /opt/godot/editor_settings-4.tres
 
 COPY docker/build-android.sh /usr/local/bin/build-android.sh
 RUN chmod 0755 /usr/local/bin/build-android.sh && mkdir -p /workspace/build
