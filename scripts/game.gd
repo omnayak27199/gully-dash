@@ -23,6 +23,8 @@ const GARAGE_CLASSIC := Rect2(70.0, 330.0, 400.0, 100.0)
 const GARAGE_BLUE := Rect2(70.0, 448.0, 400.0, 100.0)
 const GARAGE_PINK := Rect2(70.0, 566.0, 400.0, 100.0)
 const CONTENT_BACK := Rect2(135.0, 770.0, 270.0, 58.0)
+const EXIT_STAY := Rect2(120.0, 470.0, 300.0, 62.0)
+const EXIT_QUIT := Rect2(120.0, 550.0, 300.0, 62.0)
 const SETTINGS_SOUND := Rect2(90.0, 350.0, 360.0, 62.0)
 const SETTINGS_HAPTICS := Rect2(90.0, 440.0, 360.0, 62.0)
 const SETTINGS_MOTION := Rect2(90.0, 530.0, 360.0, 62.0)
@@ -49,6 +51,7 @@ var obstacle_timer: float = 0.0
 var collectible_timer: float = 0.0
 var last_obstacle_lane: int = -1
 var run_state: StringName = &"menu"
+var settings_return_state: StringName = &"menu"
 var touch_start := Vector2(-1.0, -1.0)
 var shield_active: bool = false
 var multiplier_time: float = 0.0
@@ -233,7 +236,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					_resume_run()
 				&"game_over":
 					_start_run()
-				&"settings", &"garage", &"missions":
+				&"settings":
+					_return_from_settings()
+				&"garage", &"missions":
+					_show_menu()
+				&"exit_confirm":
 					_show_menu()
 		get_viewport().set_input_as_handled()
 
@@ -249,13 +256,17 @@ func _handle_back_request() -> void:
 			_pause_run()
 		&"paused":
 			_show_menu()
-		&"garage", &"missions", &"settings":
+		&"settings":
+			_return_from_settings()
+		&"garage", &"missions":
+			_show_menu()
+		&"exit_confirm":
 			_show_menu()
 		&"game_over":
 			_show_menu()
 		&"menu":
-			# Let the OS own the final exit gesture from the main menu.
-			pass
+			run_state = &"exit_confirm"
+			player.visible = false
 	queue_redraw()
 
 
@@ -278,13 +289,14 @@ func _handle_tap(position: Vector2) -> void:
 				_start_run()
 			elif MENU_GARAGE.has_point(position):
 				run_state = &"garage"
-				player.visible = true
+				player.visible = false
 				player.set_controls_enabled(false)
 			elif MENU_MISSIONS.has_point(position):
 				run_state = &"missions"
 				player.visible = false
 				player.set_controls_enabled(false)
 			elif MENU_SETTINGS.has_point(position):
+				settings_return_state = &"menu"
 				run_state = &"settings"
 				player.visible = false
 				player.set_controls_enabled(false)
@@ -301,6 +313,7 @@ func _handle_tap(position: Vector2) -> void:
 			elif PAUSE_HOME.has_point(position):
 				_show_menu()
 			elif PAUSE_SETTINGS.has_point(position):
+				settings_return_state = &"paused"
 				run_state = &"settings"
 				player.visible = false
 
@@ -334,7 +347,13 @@ func _handle_tap(position: Vector2) -> void:
 			elif SETTINGS_MOTION.has_point(position):
 				SettingsManager.toggle_reduced_motion()
 			elif CONTENT_BACK.has_point(position):
+				_return_from_settings()
+
+		&"exit_confirm":
+			if EXIT_STAY.has_point(position):
 				_show_menu()
+			elif EXIT_QUIT.has_point(position):
+				get_tree().quit()
 
 	queue_redraw()
 
@@ -377,6 +396,13 @@ func _resume_run() -> void:
 		return
 	run_state = &"playing"
 	player.set_controls_enabled(true)
+	queue_redraw()
+
+
+func _return_from_settings() -> void:
+	run_state = settings_return_state
+	player.visible = run_state == &"menu" or run_state == &"paused"
+	player.set_controls_enabled(run_state == &"playing")
 	queue_redraw()
 
 
@@ -473,9 +499,6 @@ func _draw() -> void:
 	if run_state == &"playing" or run_state == &"paused":
 		_draw_game_hud()
 
-	if status_time > 0.0 and not status_message.is_empty():
-		_draw_status_message()
-
 	match run_state:
 		&"menu":
 			_draw_menu()
@@ -489,6 +512,11 @@ func _draw() -> void:
 			_draw_missions()
 		&"settings":
 			_draw_settings()
+		&"exit_confirm":
+			_draw_exit_confirm()
+
+	if status_time > 0.0 and not status_message.is_empty() and run_state != &"game_over":
+		_draw_status_message()
 
 
 func _draw_road() -> void:
@@ -586,8 +614,6 @@ func _draw_menu() -> void:
 	_draw_button(MENU_SETTINGS, "SETTINGS", false, 18)
 	_draw_text("BEST  %06d" % SaveManager.best_score, Vector2(32.0, 858.0), 18, COLOR_INK)
 	_draw_text("CHAI COINS  %d" % SaveManager.bank_coins, Vector2(32.0, 890.0), 17, COLOR_GOLD)
-	if not status_message.is_empty() and status_time > 0.0:
-		_draw_centered_text(status_message, Vector2(270.0, 332.0), 13, Color("#ffdf8a"))
 
 
 func _draw_pause_screen() -> void:
@@ -662,15 +688,24 @@ func _draw_settings() -> void:
 	_draw_button(CONTENT_BACK, "BACK", false, 18)
 
 
+func _draw_exit_confirm() -> void:
+	_draw_backdrop()
+	_draw_centered_text("END THIS RIDE?", Vector2(270.0, 370.0), 34, COLOR_GOLD)
+	_draw_centered_text("Your saved coins and records will stay on this device.", Vector2(270.0, 410.0), 13, COLOR_MUTED)
+	_draw_button(EXIT_STAY, "KEEP PLAYING", true, 20)
+	_draw_button(EXIT_QUIT, "EXIT GAME", false, 20)
+
+
 func _on_off(enabled: bool) -> String:
 	return "ON" if enabled else "OFF"
 
 
 func _draw_status_message() -> void:
 	var alpha: float = clampf(status_time / 0.25, 0.0, 1.0)
-	var rect := Rect2(55.0, 170.0, 430.0, 52.0)
+	var baseline: float = 235.0 if run_state in [&"garage", &"missions", &"settings"] else 202.0
+	var rect := Rect2(55.0, baseline - 34.0, 430.0, 52.0)
 	draw_rect(rect, Color(COLOR_PANEL.r, COLOR_PANEL.g, COLOR_PANEL.b, alpha * 0.94))
-	_draw_centered_text(status_message, Vector2(270.0, 202.0), 15, Color(1.0, 1.0, 1.0, alpha))
+	_draw_centered_text(status_message, Vector2(270.0, baseline), 15, Color(1.0, 1.0, 1.0, alpha))
 
 
 func _draw_backdrop() -> void:
