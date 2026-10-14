@@ -86,6 +86,7 @@ func _run_tests() -> void:
 	_check(game.run_state == &"paused", "back pauses restarted run")
 	game._handle_back_request()
 	_check(game.run_state == &"menu", "back from pause returns to main menu")
+	_check(not game.player._controls_enabled, "main menu keeps player steering disabled after reset")
 	game._handle_back_request()
 	_check(game.run_state == &"exit_confirm", "back from menu requests exit confirmation")
 	game._handle_tap(Vector2(260.0, 500.0))
