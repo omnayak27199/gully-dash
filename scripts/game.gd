@@ -67,6 +67,7 @@ func _ready() -> void:
 	rng.randomize()
 	player.position.y = PLAYER_Y
 	player.apply_skin(SaveManager.selected_skin)
+	player.set_reduced_motion_enabled(SettingsManager.reduced_motion)
 	player.set_controls_enabled(false)
 	player.visible = true
 	AudioFeedback.play_event(&"start")
@@ -346,6 +347,7 @@ func _handle_tap(position: Vector2) -> void:
 				SettingsManager.toggle_haptics()
 			elif SETTINGS_MOTION.has_point(position):
 				SettingsManager.toggle_reduced_motion()
+				player.set_reduced_motion_enabled(SettingsManager.reduced_motion)
 			elif CONTENT_BACK.has_point(position):
 				_return_from_settings()
 
@@ -376,6 +378,7 @@ func _start_run() -> void:
 	player.reset_player()
 	player.position.y = PLAYER_Y
 	player.apply_skin(SaveManager.selected_skin)
+	player.set_reduced_motion_enabled(SettingsManager.reduced_motion)
 	player.set_controls_enabled(true)
 	player.visible = true
 	AudioFeedback.play_event(&"start")
@@ -411,6 +414,7 @@ func _show_menu() -> void:
 	player.set_controls_enabled(false)
 	player.reset_player()
 	player.apply_skin(SaveManager.selected_skin)
+	player.set_reduced_motion_enabled(SettingsManager.reduced_motion)
 	player.position.y = PLAYER_Y
 	player.visible = true
 	queue_redraw()
