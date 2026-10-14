@@ -45,7 +45,9 @@ Build a small, polished, portrait-mode Android arcade game that can be played of
 - [x] Persistent sound/haptics/reduced-motion settings
 - [x] Lightweight runtime-generated sound effects; no borrowed music/audio files
 - [x] Layout and touch hit areas defined against the portrait logical viewport
-- [ ] Replace placeholder drawings/audio with original high-quality art/audio
+- [x] Replace core auto/traffic/collectible/roadside placeholder drawings with original SVG vector assets
+- [x] Add an original SVG app-icon source asset
+- [ ] Replace synthesized placeholder tones with a polished original sound design
 - [ ] Check clipping, input reachability and readability on multiple physical screen sizes
 
 ## Milestone 5 — Reproducible Android debug build
