@@ -42,3 +42,6 @@ jobs:
 
       - name: Run gameplay integration smoke tests
         run: "$GODOT_BIN --headless --path . --script res://tests/game_smoke_test.gd"
+
+      - name: Run save manager persistence tests
+        run: "$GODOT_BIN --headless --path . --script res://tests/save_manager_test.gd"
