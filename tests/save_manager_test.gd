@@ -23,10 +23,23 @@ func _run_tests() -> void:
 	manager.record_run(10, 1, 2, 0)
 
 	var expected_best: int = manager.best_score
-	var expected_coins: int = manager.bank_coins
-	var expected_runs: int = manager.lifetime_runs
 	_check(expected_runs == 2, "completed runs increment lifetime count")
 	_check(expected_best == 987654, "best score stores the maximum")
+
+	var completed_missions: Array[String] = manager.record_run(200, 22, 877, 0)
+	_check(completed_missions.has("collect_25"), "coin mission awards on threshold")
+	_check(manager.get_mission_progress("collect_25")["completed"], "coin mission is marked completed")
+	var wallet_after_reward: int = manager.bank_coins
+	manager.record_run(0, 10, 0, 0)
+	_check(manager.bank_coins < wallet_after_reward + 10 + 30, "completed mission reward is not paid twice")
+
+	_check(not manager.buy_or_select_skin(&"unknown"), "unknown skin IDs are rejected")
+	_check(not manager.buy_or_select_skin(&"blue"), "insufficient wallet cannot buy a skin")
+	manager.bank_coins = 150
+	manager._save_data()
+	_check(manager.buy_or_select_skin(&"blue"), "available skin can be purchased")
+	_check(manager.selected_skin == &"blue", "purchased skin becomes selected")
+	_check(manager.bank_coins == 50, "skin purchase deducts the correct price")
 
 	var reloaded: Variant = manager_script.new()
 	reloaded.set_storage_paths(TEST_SAVE, TEST_TEMP, TEST_BACKUP)
@@ -48,7 +61,7 @@ func _run_tests() -> void:
 	recovery_manager.set_storage_paths(TEST_SAVE, TEST_TEMP, TEST_BACKUP)
 	get_tree().root.add_child(recovery_manager)
 	await get_tree().process_frame
-	_check(recovery_manager.best_score == expected_best, "corrupt primary recovers best score from backup")
+	_check(recovery_manager.best_score == manager.best_score, "corrupt primary recovers best score from backup")
 	_check(recovery_manager.lifetime_runs >= 1, "recovered save contains committed progress")
 
 	manager.queue_free()
