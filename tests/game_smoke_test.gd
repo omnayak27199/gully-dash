@@ -35,6 +35,28 @@ func _run_tests() -> void:
 	_check(game.player.visible, "player is visible during a run")
 	_check(game.player._controls_enabled, "steering enabled during a run")
 
+	game.score = 0.0
+	game.coins_collected = 0
+	game.powerups_used = 0
+	game._collect_item(&"coin")
+	_check(game.coins_collected == 1, "coin pickup increments run coins")
+	_check(is_equal_approx(game.score, 25.0), "coin pickup adds score")
+	game.multiplier_time = 5.0
+	game._collect_item(&"coin")
+	_check(game.coins_collected == 3, "active multiplier doubles coin value")
+	_check(is_equal_approx(game.score, 75.0), "active multiplier doubles coin score")
+	game._collect_item(&"passenger")
+	_check(game.multiplier_time >= 7.0, "passenger starts score multiplier")
+	game._collect_item(&"shield")
+	_check(game.shield_active, "shield pickup activates one-hit protection")
+	game.obstacles.append({"lane": 1, "x": 270.0, "y": 790.0, "kind": "car"})
+	game._update_obstacles(0.016, 0.0)
+	_check(not game.shield_active, "shield absorbs one colliding vehicle")
+	_check(game.run_state == &"playing", "shield prevents immediate game over")
+	game._collect_item(&"multiplier")
+	_check(game.multiplier_time >= 9.0, "multiplier power-up extends the bonus window")
+	_check(game.powerups_used == 3, "passenger and power-ups count as run pickups")
+
 	game._handle_back_request()
 	_check(game.run_state == &"paused", "back request pauses active run")
 	_check(not game.player._controls_enabled, "pause disables steering")
