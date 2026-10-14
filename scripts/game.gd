@@ -17,8 +17,8 @@ const PAUSE_HITBOX := Rect2(465.0, 7.0, 65.0, 65.0)
 const PAUSE_RESUME := Rect2(120.0, 380.0, 300.0, 64.0)
 const PAUSE_HOME := Rect2(120.0, 462.0, 300.0, 58.0)
 const PAUSE_SETTINGS := Rect2(120.0, 538.0, 300.0, 58.0)
-const GAME_OVER_RETRY := Rect2(125.0, 535.0, 290.0, 68.0)
-const GAME_OVER_HOME := Rect2(135.0, 624.0, 270.0, 54.0)
+const GAME_OVER_RETRY := Rect2(125.0, 568.0, 290.0, 64.0)
+const GAME_OVER_HOME := Rect2(135.0, 650.0, 270.0, 54.0)
 const GARAGE_CLASSIC := Rect2(70.0, 330.0, 400.0, 100.0)
 const GARAGE_BLUE := Rect2(70.0, 448.0, 400.0, 100.0)
 const GARAGE_PINK := Rect2(70.0, 566.0, 400.0, 100.0)
@@ -474,9 +474,13 @@ func _spawn_collectible() -> void:
 	# Put some passenger pickups ahead of traffic in the same lane, creating
 	# a readable opportunity with a genuine risk if the player stays too long.
 	if kind == &"passenger" and not obstacles.is_empty() and rng.randf() < 0.7:
-		var near_obstacle: Dictionary = obstacles[rng.randi_range(0, obstacles.size() - 1)]
-		lane = int(near_obstacle["lane"])
-		spawn_y = float(near_obstacle["y"]) + 65.0
+		# The most recently spawned vehicle is ahead; only use it while the
+		# pickup still has enough runway to be a genuine, readable choice.
+		var near_obstacle: Dictionary = obstacles[obstacles.size() - 1]
+		var obstacle_y: float = float(near_obstacle["y"])
+		if obstacle_y < PLAYER_Y - 200.0:
+			lane = int(near_obstacle["lane"])
+			spawn_y = maxf(-35.0, obstacle_y + 65.0)
 
 	collectibles.append({"x": LANE_CENTERS[lane], "y": spawn_y, "kind": kind})
 
@@ -633,7 +637,7 @@ func _draw_game_over() -> void:
 	_draw_centered_text("COLLECTED  ₹ %d" % coins_collected, Vector2(270.0, 480.0), 18, COLOR_GOLD)
 	_draw_centered_text("BEST  %06d" % SaveManager.best_score, Vector2(270.0, 510.0), 16, COLOR_INK)
 	if not completed_missions_this_run.is_empty():
-		_draw_centered_text("CHALLENGE REWARD EARNED!", Vector2(270.0, 529.0), 13, Color("#9fe0b1"))
+		_draw_centered_text("CHALLENGE REWARD EARNED!", Vector2(270.0, 548.0), 13, Color("#9fe0b1"))
 	_draw_button(GAME_OVER_RETRY, "RIDE AGAIN", true, 22)
 	_draw_button(GAME_OVER_HOME, "MAIN MENU", false, 18)
 
