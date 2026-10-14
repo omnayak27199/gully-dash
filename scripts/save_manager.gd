@@ -123,10 +123,18 @@ func _award_completed_missions() -> Array[String]:
 func _load_data() -> void:
 	var config := ConfigFile.new()
 	var err: Error = config.load(SAVE_PATH)
-	if err != OK:
-		# Recover from the last known good backup if the primary file was cut off.
-		config = ConfigFile.new()
-		err = config.load(BACKUP_PATH)
+	var primary_valid: bool = err == OK and int(config.get_value("meta", "version", -1)) == SAVE_VERSION
+
+	if not primary_valid:
+		# A parse error OR an incompatible primary can recover from a valid backup.
+		var backup := ConfigFile.new()
+		var backup_error: Error = backup.load(BACKUP_PATH)
+		var backup_valid: bool = backup_error == OK and int(backup.get_value("meta", "version", -1)) == SAVE_VERSION
+		if backup_valid:
+			config = backup
+			err = OK
+		else:
+			err = ERR_FILE_CORRUPT
 
 	if err == OK and int(config.get_value("meta", "version", -1)) == SAVE_VERSION:
 		best_score = maxi(0, int(config.get_value("stats", "best_score", 0)))
@@ -197,12 +205,25 @@ func _save_data() -> void:
 	var temp_path: String = ProjectSettings.globalize_path(TEMP_PATH)
 	var backup_path: String = ProjectSettings.globalize_path(BACKUP_PATH)
 
-	if FileAccess.file_exists(BACKUP_PATH):
-		DirAccess.remove_absolute(backup_path)
+	# Keep one previous known-good save. If the primary is corrupt, do not
+	# overwrite the good backup with the corrupt file.
+	var primary_valid: bool = false
 	if FileAccess.file_exists(SAVE_PATH):
+		var existing := ConfigFile.new()
+		var existing_error: Error = existing.load(SAVE_PATH)
+		primary_valid = existing_error == OK and int(existing.get_value("meta", "version", -1)) == SAVE_VERSION
+
+	if primary_valid:
+		if FileAccess.file_exists(BACKUP_PATH):
+			DirAccess.remove_absolute(backup_path)
 		err = DirAccess.rename_absolute(primary_path, backup_path)
 		if err != OK:
 			push_error("Could not rotate save file to backup: %s" % error_string(err))
+			return
+	elif FileAccess.file_exists(SAVE_PATH):
+		err = DirAccess.remove_absolute(primary_path)
+		if err != OK:
+			push_error("Could not remove invalid primary save: %s" % error_string(err))
 			return
 
 	err = DirAccess.rename_absolute(temp_path, primary_path)
@@ -211,6 +232,3 @@ func _save_data() -> void:
 		if FileAccess.file_exists(BACKUP_PATH) and not FileAccess.file_exists(SAVE_PATH):
 			DirAccess.rename_absolute(backup_path, primary_path)
 		return
-
-	if FileAccess.file_exists(BACKUP_PATH):
-		DirAccess.remove_absolute(backup_path)
