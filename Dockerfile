@@ -62,8 +62,8 @@ RUN set -eux; \
 
 # Keep readable Android SDK/JDK settings for non-root builds.
 RUN mkdir -p /opt/godot && \
-    printf '[gd_resource type="EditorSettings" format=3]\\n\\n[resource]\\nexport/android/java_sdk_path = "%s"\\nexport/android/android_sdk_path = "%s"\\n' \
-      "${JAVA_HOME}" "${ANDROID_HOME}" > /opt/godot/editor_settings-4.tres && \
+    printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' \
+      "\${JAVA_HOME}" "\${ANDROID_HOME}" > /opt/godot/editor_settings-4.tres && \
     chmod a+r /opt/godot/editor_settings-4.tres
 
 COPY docker/build-android.sh /usr/local/bin/build-android.sh
