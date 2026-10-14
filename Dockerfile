@@ -35,9 +35,10 @@ RUN set -eux; \
       "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" \
       --output /tmp/godot-templates.tpz; \
     unzip -t /tmp/godot-templates.tpz; \
-    mkdir -p /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable /tmp/godot-templates; \
+    mkdir -p /opt/godot/export_templates/${GODOT_VERSION}.stable /tmp/godot-templates; \
     unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates; \
-    cp -a /tmp/godot-templates/templates/. /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable/; \
+    cp -a /tmp/godot-templates/templates/. /opt/godot/export_templates/${GODOT_VERSION}.stable/; \
+    chmod -R a+rX /opt/godot; \
     rm -rf /tmp/godot.zip /tmp/godot-bin /tmp/godot-templates.tpz /tmp/godot-templates; \
     godot --headless --version
 
