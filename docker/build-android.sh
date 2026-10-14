@@ -8,8 +8,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_DIR}/build}"
 
 cd "${PROJECT_DIR}"
 
-# The image bakes templates and SDK settings under /root. Copy them into the
-# caller's writable HOME so the build also works with a non-root container user.
+# The image keeps read-only templates and SDK settings under /opt/godot.
+# Copy them into the caller's writable HOME so Godot finds them under non-root.
 USER_HOME="${HOME:-/root}"
 TEMPLATE_SOURCE="/opt/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
 TEMPLATE_DEST="${USER_HOME}/.local/share/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
@@ -27,7 +27,7 @@ if [[ ! -s "${TEMPLATE_DEST}/android_debug.apk" || ! -s "${TEMPLATE_DEST}/androi
   exit 5
 fi
 if [[ -f /opt/godot/editor_settings-4.tres && ! -f "${USER_HOME}/.config/godot/editor_settings-4.tres" ]]; then
-  cp /root/.config/godot/editor_settings-4.tres "${USER_HOME}/.config/godot/editor_settings-4.tres"
+  cp /opt/godot/editor_settings-4.tres "${USER_HOME}/.config/godot/editor_settings-4.tres"
 fi
 
 if [[ ! -f project.godot ]]; then
