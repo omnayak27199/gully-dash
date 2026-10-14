@@ -19,13 +19,26 @@ var _target_x: float = LANE_CENTERS[1]
 var _controls_enabled: bool = true
 var reduced_motion_enabled: bool = false
 var _skin_id: StringName = &"classic"
-var _body_color: Color = Color("#f0b92f")
-var _canopy_color: Color = Color("#176d49")
-var _canopy_highlight: Color = Color("#238957")
+var _skin_texture: Texture2D
+var _visual: Sprite2D
 
 
 func _ready() -> void:
 	reset_player()
+	_setup_visual()
+
+
+func _setup_visual() -> void:
+	_visual = Sprite2D.new()
+	_visual.name = "AutoSprite"
+	_visual.position = Vector2.ZERO
+	_visual.scale = Vector2(0.42, 0.42)
+	_visual.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	add_child(_visual)
+	if _skin_texture == null:
+		apply_skin(_skin_id)
+	else:
+		_visual.texture = _skin_texture
 
 
 func _process(delta: float) -> void:
@@ -78,22 +91,23 @@ func set_reduced_motion_enabled(enabled: bool) -> void:
 
 ## Apply the selected local cosmetic skin. Unknown IDs safely fall back to classic.
 func apply_skin(skin_id: StringName) -> void:
-	_skin_id = skin_id
-	match _skin_id:
+	var asset_path: String
+	match skin_id:
 		&"blue":
-			_body_color = Color("#4a9ddb")
-			_canopy_color = Color("#18385f")
-			_canopy_highlight = Color("#2867a2")
+			_skin_id = &"blue"
+			asset_path = "res://assets/sprites/auto_blue.svg"
 		&"pink":
-			_body_color = Color("#f27cad")
-			_canopy_color = Color("#7d285d")
-			_canopy_highlight = Color("#a93c7f")
+			_skin_id = &"pink"
+			asset_path = "res://assets/sprites/auto_pink.svg"
 		_:
 			_skin_id = &"classic"
-			_body_color = Color("#f0b92f")
-			_canopy_color = Color("#176d49")
-			_canopy_highlight = Color("#238957")
-	queue_redraw()
+			asset_path = "res://assets/sprites/auto_classic.svg"
+
+	_skin_texture = load(asset_path) as Texture2D
+	if _skin_texture == null:
+		push_error("Could not load auto skin asset: " + asset_path)
+	elif is_instance_valid(_visual):
+		_visual.texture = _skin_texture
 
 
 ## Reset all movement state between runs so no steering momentum carries over.
@@ -112,77 +126,3 @@ func get_hitbox_rect() -> Rect2:
 	return Rect2(position - HITBOX_SIZE * 0.5, HITBOX_SIZE)
 
 
-func _draw() -> void:
-	_draw_shadow()
-	_draw_wheels()
-	_draw_auto_body()
-
-
-func _draw_shadow() -> void:
-	var points := PackedVector2Array()
-	const POINT_COUNT: int = 20
-	for index in range(POINT_COUNT):
-		var angle: float = TAU * float(index) / float(POINT_COUNT)
-		points.append(Vector2(cos(angle) * 28.0, 8.0 + sin(angle) * 43.0))
-	draw_colored_polygon(points, Color(0.02, 0.03, 0.025, 0.30))
-
-
-func _draw_wheels() -> void:
-	# A three-wheeler silhouette: one front wheel and two rear wheels.
-	draw_rect(Rect2(-5.5, -40.0, 11.0, 22.0), Color("#111518"))
-	draw_rect(Rect2(-27.0, 12.0, 9.0, 22.0), Color("#111518"))
-	draw_rect(Rect2(18.0, 12.0, 9.0, 22.0), Color("#111518"))
-	draw_rect(Rect2(-3.0, -36.0, 6.0, 13.0), Color("#626a6d"))
-	draw_rect(Rect2(-25.0, 16.0, 5.0, 14.0), Color("#626a6d"))
-	draw_rect(Rect2(20.0, 16.0, 5.0, 14.0), Color("#626a6d"))
-
-
-func _draw_auto_body() -> void:
-	# Outer body and yellow side panels.
-	var body_outline := PackedVector2Array([
-		Vector2(-15.0, -37.0),
-		Vector2(15.0, -37.0),
-		Vector2(24.0, -14.0),
-		Vector2(24.0, 25.0),
-		Vector2(17.0, 35.0),
-		Vector2(-17.0, 35.0),
-		Vector2(-24.0, 25.0),
-		Vector2(-24.0, -14.0)
-	])
-	draw_colored_polygon(body_outline, Color("#292b26"))
-
-	var body_fill := PackedVector2Array([
-		Vector2(-12.0, -34.0),
-		Vector2(12.0, -34.0),
-		Vector2(20.0, -13.0),
-		Vector2(20.0, 23.0),
-		Vector2(14.0, 31.0),
-		Vector2(-14.0, 31.0),
-		Vector2(-20.0, 23.0),
-		Vector2(-20.0, -13.0)
-	])
-	draw_colored_polygon(body_fill, _body_color)
-
-	# Front windshield faces the top of the screen, toward incoming traffic.
-	var windshield := PackedVector2Array([
-		Vector2(-14.0, -28.0),
-		Vector2(14.0, -28.0),
-		Vector2(18.0, -14.0),
-		Vector2(-18.0, -14.0)
-	])
-	draw_colored_polygon(windshield, Color("#83d2e5"))
-	draw_line(Vector2(-14.0, -27.0), Vector2(14.0, -27.0), Color("#d4f5fa"), 2.0)
-
-	# Green passenger canopy and a small rear bench.
-	draw_rect(Rect2(-18.0, -9.0, 36.0, 27.0), _canopy_color)
-	draw_rect(Rect2(-14.0, -5.0, 28.0, 19.0), _canopy_highlight)
-	draw_rect(Rect2(-12.0, 8.0, 24.0, 5.0), Color("#8c4731"))
-	draw_rect(Rect2(-17.0, 17.0, 34.0, 5.0), Color("#f7d35d"))
-
-	# Headlights, indicators and rear lamps.
-	draw_rect(Rect2(-17.0, -32.0, 7.0, 5.0), Color("#fff4b4"))
-	draw_rect(Rect2(10.0, -32.0, 7.0, 5.0), Color("#fff4b4"))
-	draw_rect(Rect2(-21.0, -15.0, 3.0, 9.0), Color("#db6d43"))
-	draw_rect(Rect2(18.0, -15.0, 3.0, 9.0), Color("#db6d43"))
-	draw_rect(Rect2(-15.0, 27.0, 6.0, 4.0), Color("#d64a3e"))
-	draw_rect(Rect2(9.0, 27.0, 6.0, 4.0), Color("#d64a3e"))
