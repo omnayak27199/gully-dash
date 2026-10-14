@@ -39,3 +39,6 @@ jobs:
 
       - name: Run player controller smoke tests
         run: "$GODOT_BIN --headless --path . --script res://tests/player_controller_test.gd"
+
+      - name: Run gameplay integration smoke tests
+        run: "$GODOT_BIN --headless --path . --script res://tests/game_smoke_test.gd"
