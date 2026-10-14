@@ -1,11 +1,11 @@
-extends SceneTree
-## Lightweight, dependency-free smoke tests for PlayerController.
-## Run after editor import: godot --headless --path . --script res://tests/player_controller_test.gd
+extends Node
+## Smoke tests run as a normal scene so the project's Autoloads and global
+## script classes are initialized. The test exits Godot with a failing code.
 
 var failures: int = 0
 
 
-func _initialize() -> void:
+func _ready() -> void:
 	call_deferred("_run_tests")
 
 
@@ -13,17 +13,17 @@ func _run_tests() -> void:
 	var packed_scene := load("res://scenes/player_auto.tscn") as PackedScene
 	_check(packed_scene != null, "player scene loads")
 	if packed_scene == null:
-		quit(1)
+		_finish()
 		return
 
-	var player := packed_scene.instantiate() as PlayerController
+	var player: PlayerController = packed_scene.instantiate() as PlayerController
 	_check(player != null, "player scene has PlayerController")
 	if player == null:
-		quit(1)
+		_finish()
 		return
 
-	root.add_child(player)
-	await process_frame
+	get_tree().root.add_child(player)
+	await get_tree().process_frame
 
 	_check(player.current_lane == 1, "player starts in center lane")
 	_check(player.position.is_equal_approx(Vector2(270.0, 790.0)), "player starts at expected position")
@@ -44,20 +44,25 @@ func _run_tests() -> void:
 	player.set_controls_enabled(false)
 	_check(not player.change_lane(-1), "disabled controls reject lane requests")
 	_check(player.current_lane == 2, "disabled controls preserve the current lane")
+	player.set_controls_enabled(true)
+
+	player.set_reduced_motion_enabled(true)
+	_check(player.reduced_motion_enabled, "reduced motion can be injected without global dependencies")
 
 	player.reset_player()
 	_check(player.current_lane == 1, "reset returns player to center lane")
 	_check(player.position.is_equal_approx(Vector2(270.0, 790.0)), "reset restores player position")
 	_check(is_zero_approx(player.rotation), "reset clears steering rotation")
 	_check(player.visible, "reset shows player again")
-	_check(player.get_hitbox_rect().size.is_equal_approx(Vector2(42.0, 62.0)), "hitbox dimensions match the tuned collider")
+	_check(player.get_hitbox_rect().size.is_equal_approx(Vector2(42.0, 62.0)), "hitbox dimensions match tuned collider")
 
+	player.queue_free()
 	if failures == 0:
 		print("PLAYER_CONTROLLER_TESTS: PASS")
-		quit(0)
+		_finish()
 	else:
 		push_error("PLAYER_CONTROLLER_TESTS: %d failure(s)" % failures)
-		quit(1)
+		_finish(1)
 
 
 func _check(condition: bool, description: String) -> void:
@@ -66,3 +71,7 @@ func _check(condition: bool, description: String) -> void:
 	else:
 		failures += 1
 		push_error("FAIL: " + description)
+
+
+func _finish(exit_code: int = 0) -> void:
+	get_tree().quit(exit_code)
