@@ -30,6 +30,23 @@ if [[ -f /opt/godot/editor_settings-4.tres && ! -f "${USER_HOME}/.config/godot/e
   cp /opt/godot/editor_settings-4.tres "${USER_HOME}/.config/godot/editor_settings-4.tres"
 fi
 
+# Fail early with a clear path diagnostic instead of a vague Godot export error.
+if [[ ! -x "${JAVA_HOME}/bin/java" ]]; then
+  echo "ERROR: Java executable missing at ${JAVA_HOME}/bin/java" >&2
+  exit 6
+fi
+for required_dir in "${ANDROID_HOME}/platform-tools" "${ANDROID_HOME}/build-tools" "${ANDROID_HOME}/platforms"; do
+  if [[ ! -d "${required_dir}" ]]; then
+    echo "ERROR: Android SDK component directory missing: ${required_dir}" >&2
+    find "${ANDROID_HOME}" -maxdepth 3 -type d -print >&2 || true
+    exit 7
+  fi
+done
+echo "==> Android build paths"
+echo "JAVA_HOME=${JAVA_HOME}"
+echo "ANDROID_HOME=${ANDROID_HOME}"
+grep -E '^export/android/(java_sdk_path|android_sdk_path)' "${USER_HOME}/.config/godot/editor_settings-4.tres" || true
+
 if [[ ! -f project.godot ]]; then
   echo "ERROR: project.godot was not found in ${PROJECT_DIR}" >&2
   exit 2
