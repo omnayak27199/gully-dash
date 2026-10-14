@@ -17,6 +17,10 @@ const HITBOX_SIZE := Vector2(42.0, 62.0)
 var current_lane: int = 1
 var _target_x: float = LANE_CENTERS[1]
 var _controls_enabled: bool = true
+var _skin_id: StringName = &"classic"
+var _body_color: Color = Color("#f0b92f")
+var _canopy_color: Color = Color("#176d49")
+var _canopy_highlight: Color = Color("#238957")
 
 
 func _ready() -> void:
@@ -31,8 +35,11 @@ func _process(delta: float) -> void:
 	position.x = move_toward(position.x, _target_x, lane_change_speed * delta)
 
 	var desired_angle: float = 0.0
+	var steering_limit: float = max_steering_angle_degrees
+	if SettingsManager.reduced_motion:
+		steering_limit = 0.0
 	if absf(lane_error) > 1.0:
-		desired_angle = deg_to_rad(signf(lane_error) * max_steering_angle_degrees)
+		desired_angle = deg_to_rad(signf(lane_error) * steering_limit)
 
 	rotation = lerp_angle(
 		rotation,
@@ -61,6 +68,26 @@ func change_lane(direction: int) -> bool:
 
 func set_controls_enabled(enabled: bool) -> void:
 	_controls_enabled = enabled
+
+
+## Apply the selected local cosmetic skin. Unknown IDs safely fall back to classic.
+func apply_skin(skin_id: StringName) -> void:
+	_skin_id = skin_id
+	match _skin_id:
+		&"blue":
+			_body_color = Color("#4a9ddb")
+			_canopy_color = Color("#18385f")
+			_canopy_highlight = Color("#2867a2")
+		&"pink":
+			_body_color = Color("#f27cad")
+			_canopy_color = Color("#7d285d")
+			_canopy_highlight = Color("#a93c7f")
+		_:
+			_skin_id = &"classic"
+			_body_color = Color("#f0b92f")
+			_canopy_color = Color("#176d49")
+			_canopy_highlight = Color("#238957")
+	queue_redraw()
 
 
 ## Reset all movement state between runs so no steering momentum carries over.
@@ -128,7 +155,7 @@ func _draw_auto_body() -> void:
 		Vector2(-20.0, 23.0),
 		Vector2(-20.0, -13.0)
 	])
-	draw_colored_polygon(body_fill, Color("#f0b92f"))
+	draw_colored_polygon(body_fill, _body_color)
 
 	# Front windshield faces the top of the screen, toward incoming traffic.
 	var windshield := PackedVector2Array([
@@ -141,8 +168,8 @@ func _draw_auto_body() -> void:
 	draw_line(Vector2(-14.0, -27.0), Vector2(14.0, -27.0), Color("#d4f5fa"), 2.0)
 
 	# Green passenger canopy and a small rear bench.
-	draw_rect(Rect2(-18.0, -9.0, 36.0, 27.0), Color("#176d49"))
-	draw_rect(Rect2(-14.0, -5.0, 28.0, 19.0), Color("#238957"))
+	draw_rect(Rect2(-18.0, -9.0, 36.0, 27.0), _canopy_color)
+	draw_rect(Rect2(-14.0, -5.0, 28.0, 19.0), _canopy_highlight)
 	draw_rect(Rect2(-12.0, 8.0, 24.0, 5.0), Color("#8c4731"))
 	draw_rect(Rect2(-17.0, 17.0, 34.0, 5.0), Color("#f7d35d"))
 
