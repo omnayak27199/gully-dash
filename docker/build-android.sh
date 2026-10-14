@@ -8,6 +8,20 @@ OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_DIR}/build}"
 
 cd "${PROJECT_DIR}"
 
+# The image bakes templates and SDK settings under /root. Copy them into the
+# caller's writable HOME so the build also works with a non-root container user.
+USER_HOME="${HOME:-/root}"
+TEMPLATE_SOURCE="/root/.local/share/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
+TEMPLATE_DEST="${USER_HOME}/.local/share/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
+mkdir -p "${USER_HOME}/.local/share/godot/export_templates" "${USER_HOME}/.config/godot"
+if [[ -d "${TEMPLATE_SOURCE}" && ! -d "${TEMPLATE_DEST}" ]]; then
+  mkdir -p "${TEMPLATE_DEST}"
+  cp -a "${TEMPLATE_SOURCE}/." "${TEMPLATE_DEST}/"
+fi
+if [[ -f /root/.config/godot/editor_settings-4.tres && ! -f "${USER_HOME}/.config/godot/editor_settings-4.tres" ]]; then
+  cp /root/.config/godot/editor_settings-4.tres "${USER_HOME}/.config/godot/editor_settings-4.tres"
+fi
+
 if [[ ! -f project.godot ]]; then
   echo "ERROR: project.godot was not found in ${PROJECT_DIR}" >&2
   exit 2
