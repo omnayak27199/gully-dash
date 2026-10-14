@@ -1,0 +1,31 @@
+# Godot generated editor/import data
+.godot/
+.import/
+export.cfg
+
+# Exported game artifacts
+*.apk
+*.aab
+*.aar
+*.keystore
+*.jks
+
+# Android / Java / build output
+.gradle/
+build/
+dist/
+*.class
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+secrets/
+signing/
+*.p12
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
