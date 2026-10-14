@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+<defs><radialGradient id="outer" cx=".3" cy=".24" r=".75"><stop stop-color="#fff4a8"/><stop offset=".42" stop-color="#f6c443"/><stop offset="1" stop-color="#99520d"/></radialGradient><linearGradient id="inner" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff8c2"/><stop offset=".5" stop-color="#ffc734"/><stop offset="1" stop-color="#e28c16"/></linearGradient></defs>
+<circle cx="48" cy="51" r="41" fill="#2d2110" opacity=".25"/>
+<circle cx="48" cy="46" r="41" fill="url(#outer)" stroke="#7b470c" stroke-width="4"/>
+<circle cx="48" cy="46" r="33" fill="none" stroke="#fff1a4" stroke-width="3"/>
+<circle cx="48" cy="46" r="27" fill="url(#inner)" stroke="#dc941e" stroke-width="2"/>
+<path d="M33 35Q43 26 58 31M31 43Q34 37 39 36" fill="none" stroke="#fffbd0" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+<path d="M39 34H57M39 40H57M48 30V63M37 50H58" fill="none" stroke="#ae670d" stroke-width="4" stroke-linecap="round"/>
+<path d="M38 63L48 53L58 63" fill="none" stroke="#ae670d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

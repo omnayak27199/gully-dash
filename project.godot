@@ -1,11 +1,17 @@
 ; Engine configuration file.
-; Gully Dash: India Rush - Godot 4
+; Gully Dash: India Rush — Godot 4.7.2 stable project baseline.
 config_version=5
 
 [application]
 config/name="Gully Dash: India Rush"
 run/main_scene="res://scenes/main.tscn"
 config/description="A portrait 2D Indian street endless runner."
+config/version="0.1.0"
+
+[autoload]
+SaveManager="*res://scripts/save_manager.gd"
+SettingsManager="*res://scripts/settings_manager.gd"
+AudioFeedback="*res://scripts/audio_feedback.gd"
 
 [display]
 window/size/viewport_width=540
@@ -13,10 +19,12 @@ window/size/viewport_height=960
 window/size/window_width_override=405
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 window/handheld/orientation=1
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.12, 0.36, 0.2, 1)

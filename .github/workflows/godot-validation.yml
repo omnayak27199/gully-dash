@@ -1,0 +1,81 @@
+name: Godot validation
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Import project and run controller tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download pinned Godot stable
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT_VERSION="4.7.2"
+          curl --fail --location --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" \
+            --output /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          GODOT_BIN="$(find /tmp/godot -maxdepth 1 -type f -name 'Godot*' | head -n 1)"
+          test -n "$GODOT_BIN"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+
+      - name: Import project and parse resources
+        run: "$GODOT_BIN --headless --editor --path . --quit"
+
+      - name: Run player controller smoke tests
+        run: "$GODOT_BIN --headless --path . res://tests/player_controller_test.tscn"
+
+      - name: Run gameplay integration smoke tests
+        run: "$GODOT_BIN --headless --path . res://tests/game_smoke_test.tscn"
+
+      - name: Run save manager persistence tests
+        run: "$GODOT_BIN --headless --path . res://tests/save_manager_test.tscn"
+
+
+  android-debug:
+    name: Dockerized Android debug APK
+    runs-on: ubuntu-24.04
+    needs: validate
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build pinned Android toolchain image
+        run: docker build --pull -t gully-dash-android-builder:local .
+
+      - name: Export and verify debug APK
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp/godot-home \
+            --volume "$PWD:/workspace" \
+            --workdir /workspace \
+            gully-dash-android-builder:local debug-apk
+          test -s build/GullyDash-debug.apk
+
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gully-dash-debug-apk
+          path: build/GullyDash-debug.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,15 @@
+.git
+.godot
+.import
+build
+dist
+*.apk
+*.aab
+*.keystore
+*.jks
+*.p12
+.env
+.env.*
+secrets
+signing
+.DS_Store
