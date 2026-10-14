@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="190" viewBox="0 0 140 190">
+<defs><linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9d85"/><stop offset=".42" stop-color="#d8584b"/><stop offset="1" stop-color="#7f2a28"/></linearGradient><linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b8ecf6"/><stop offset="1" stop-color="#427d94"/></linearGradient></defs>
+<ellipse cx="70" cy="100" rx="54" ry="82" fill="#090b0c" opacity=".3"/>
+<g fill="#14191b" stroke="#080b0c" stroke-width="3"><rect x="8" y="50" width="19" height="42" rx="8"/><rect x="113" y="50" width="19" height="42" rx="8"/><rect x="8" y="125" width="19" height="42" rx="8"/><rect x="113" y="125" width="19" height="42" rx="8"/></g>
+<path d="M37 12Q70 1 103 12L119 43Q130 70 124 131L111 167Q105 181 88 183H52Q35 181 29 167L16 131Q10 70 21 43Z" fill="#252a2d" stroke="#111719" stroke-width="4"/>
+<path d="M39 18Q70 9 101 18L112 46Q119 70 115 126L103 160Q99 169 85 171H55Q41 169 37 160L25 126Q21 70 28 46Z" fill="url(#body)"/>
+<path d="M31 47Q70 34 109 47L117 73H23Z" fill="#f4b2a5"/>
+<path d="M34 50Q70 39 106 50L111 75H29Z" fill="url(#glass)" stroke="#d8f6fb" stroke-width="3"/>
+<path d="M34 91Q70 84 106 91V124Q102 139 91 147H49Q38 139 34 124Z" fill="url(#glass)" stroke="#722d2b" stroke-width="5"/>
+<path d="M40 98Q70 92 100 98V121Q97 130 88 134H52Q43 130 40 121Z" fill="#78b1c1"/>
+<path d="M35 146H105L97 160H43Z" fill="#852a28"/>
+<rect x="33" y="155" width="21" height="8" rx="3" fill="#ffedb4"/><rect x="86" y="155" width="21" height="8" rx="3" fill="#ffedb4"/>
+<rect x="34" y="32" width="20" height="5" rx="2" fill="#fff2b7"/><rect x="86" y="32" width="20" height="5" rx="2" fill="#fff2b7"/>
+<path d="M25 82L30 82M110 82L115 82" stroke="#ffd5bc" stroke-width="4"/>
+</svg>
