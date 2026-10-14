@@ -17,6 +17,7 @@ const HITBOX_SIZE := Vector2(42.0, 62.0)
 var current_lane: int = 1
 var _target_x: float = LANE_CENTERS[1]
 var _controls_enabled: bool = true
+var reduced_motion_enabled: bool = false
 var _skin_id: StringName = &"classic"
 var _body_color: Color = Color("#f0b92f")
 var _canopy_color: Color = Color("#176d49")
@@ -36,7 +37,7 @@ func _process(delta: float) -> void:
 
 	var desired_angle: float = 0.0
 	var steering_limit: float = max_steering_angle_degrees
-	if SettingsManager.reduced_motion:
+	if reduced_motion_enabled:
 		steering_limit = 0.0
 	if absf(lane_error) > 1.0:
 		desired_angle = deg_to_rad(signf(lane_error) * steering_limit)
@@ -68,6 +69,11 @@ func change_lane(direction: int) -> bool:
 
 func set_controls_enabled(enabled: bool) -> void:
 	_controls_enabled = enabled
+
+
+## Injected from the game coordinator to keep this controller reusable/testable.
+func set_reduced_motion_enabled(enabled: bool) -> void:
+	reduced_motion_enabled = enabled
 
 
 ## Apply the selected local cosmetic skin. Unknown IDs safely fall back to classic.
