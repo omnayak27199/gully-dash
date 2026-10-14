@@ -41,6 +41,9 @@ echo "==> Running player-controller tests"
 echo "==> Running gameplay integration tests"
 "${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/game_smoke_test.gd
 
+echo "==> Running save manager persistence tests"
+"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/save_manager_test.gd
+
 case "${BUILD_KIND}" in
   debug-apk)
     PRESET="Android Debug"
