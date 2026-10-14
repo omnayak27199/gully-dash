@@ -38,6 +38,9 @@ echo "==> Importing project and validating resources"
 echo "==> Running player-controller tests"
 "${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/player_controller_test.gd
 
+echo "==> Running gameplay integration tests"
+"${GODOT_BIN}" --headless --path "${PROJECT_DIR}" --script res://tests/game_smoke_test.gd
+
 case "${BUILD_KIND}" in
   debug-apk)
     PRESET="Android Debug"
