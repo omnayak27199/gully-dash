@@ -45,3 +45,37 @@ jobs:
 
       - name: Run save manager persistence tests
         run: "$GODOT_BIN --headless --path . res://tests/save_manager_test.tscn"
+
+
+  android-debug:
+    name: Dockerized Android debug APK
+    runs-on: ubuntu-24.04
+    needs: validate
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build pinned Android toolchain image
+        run: docker build --pull -t gully-dash-android-builder:local .
+
+      - name: Export and verify debug APK
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp/godot-home \
+            --volume "$PWD:/workspace" \
+            --workdir /workspace \
+            gully-dash-android-builder:local debug-apk
+          test -s build/GullyDash-debug.apk
+
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gully-dash-debug-apk
+          path: build/GullyDash-debug.apk
+          if-no-files-found: error
+          retention-days: 14
