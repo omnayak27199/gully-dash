@@ -14,9 +14,17 @@ USER_HOME="${HOME:-/root}"
 TEMPLATE_SOURCE="/root/.local/share/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
 TEMPLATE_DEST="${USER_HOME}/.local/share/godot/export_templates/${GODOT_VERSION:-4.7.2}.stable"
 mkdir -p "${USER_HOME}/.local/share/godot/export_templates" "${USER_HOME}/.config/godot"
-if [[ -d "${TEMPLATE_SOURCE}" && ! -d "${TEMPLATE_DEST}" ]]; then
-  mkdir -p "${TEMPLATE_DEST}"
-  cp -a "${TEMPLATE_SOURCE}/." "${TEMPLATE_DEST}/"
+if [[ ! -f "${TEMPLATE_SOURCE}/android_debug.apk" || ! -f "${TEMPLATE_SOURCE}/android_release.apk" ]]; then
+  echo "ERROR: matching Android export templates are missing from ${TEMPLATE_SOURCE}" >&2
+  find /root/.local/share/godot/export_templates -maxdepth 3 -type f -print >&2 || true
+  exit 4
+fi
+mkdir -p "${TEMPLATE_DEST}"
+cp -a "${TEMPLATE_SOURCE}/." "${TEMPLATE_DEST}/"
+if [[ ! -s "${TEMPLATE_DEST}/android_debug.apk" || ! -s "${TEMPLATE_DEST}/android_release.apk" ]]; then
+  echo "ERROR: Android export templates were not copied into ${TEMPLATE_DEST}" >&2
+  find "${TEMPLATE_DEST}" -maxdepth 2 -type f -print >&2 || true
+  exit 5
 fi
 if [[ -f /root/.config/godot/editor_settings-4.tres && ! -f "${USER_HOME}/.config/godot/editor_settings-4.tres" ]]; then
   cp /root/.config/godot/editor_settings-4.tres "${USER_HOME}/.config/godot/editor_settings-4.tres"
