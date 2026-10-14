@@ -23,8 +23,11 @@ func _run_tests() -> void:
 	manager.record_run(10, 1, 2, 0)
 
 	var expected_best: int = manager.best_score
+	var expected_runs: int = manager.lifetime_runs
 	_check(expected_runs == 2, "completed runs increment lifetime count")
 	_check(expected_best == 987654, "best score stores the maximum")
+	_check(not manager.buy_or_select_skin(&"unknown"), "unknown skin IDs are rejected")
+	_check(not manager.buy_or_select_skin(&"blue"), "insufficient wallet cannot buy a skin")
 
 	var completed_missions: Array[String] = manager.record_run(200, 22, 877, 0)
 	_check(completed_missions.has("collect_25"), "coin mission awards on threshold")
@@ -33,8 +36,6 @@ func _run_tests() -> void:
 	manager.record_run(0, 10, 0, 0)
 	_check(manager.bank_coins < wallet_after_reward + 10 + 30, "completed mission reward is not paid twice")
 
-	_check(not manager.buy_or_select_skin(&"unknown"), "unknown skin IDs are rejected")
-	_check(not manager.buy_or_select_skin(&"blue"), "insufficient wallet cannot buy a skin")
 	manager.bank_coins = 150
 	manager._save_data()
 	_check(manager.buy_or_select_skin(&"blue"), "available skin can be purchased")
